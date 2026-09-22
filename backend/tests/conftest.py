@@ -16,7 +16,6 @@ FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 FRANCE_TRANSCRIPT = REPO_ROOT / "Transcript_1_France.txt"
 GERMANY_TRANSCRIPT = REPO_ROOT / "Transcript_2_Germany.txt"
 UK_TRANSCRIPT = REPO_ROOT / "Transcript_3_UK.txt"
-INTERVIEW_GUIDE = REPO_ROOT / "Interview_Guide.txt"
 
 
 @pytest.fixture(autouse=True)
@@ -57,8 +56,3 @@ def evidence_store(france_path: Path, germany_path: Path, uk_path: Path) -> Evid
 @pytest.fixture
 def retriever(evidence_store: EvidenceStore) -> LexicalRetriever:
     return LexicalRetriever(evidence_store)
-
-
-@pytest.fixture
-def interview_guide_path() -> Path:
-    return INTERVIEW_GUIDE

@@ -28,7 +28,6 @@ Default synthesis (no API key) is an extractive provider that only cites IDs alr
 | `Transcript_1_France.txt` | Dr. Jean Martin, Head of Urology | France |
 | `Transcript_2_Germany.txt` | Anna Keller, Former Hospital Procurement Director | Germany |
 | `Transcript_3_UK.txt` | Dr. Emily Carter, Consultant Urologist | United Kingdom |
-| `Interview_Guide.txt` | Six project questions | — |
 
 Do not invent transcript content. The parser reads these files verbatim.
 
@@ -57,11 +56,10 @@ Optional Groq synthesis: copy `backend/.env.example` to `backend/.env` and set `
 ## Demo path
 
 1. Dashboard — three experts, 21 evidence items.
-2. Interview Guide — analyze question 2 (barriers) or 6 (timelines).
-3. Themes & Differences — growth scope and economics vs clinical strategy.
-4. Ask the Transcripts — “What are the purchase timelines?”
-5. Ask an unsupported question — “What is the average price of a robotic surgery system?”
-6. Follow a citation into Transcript Explorer.
+2. Themes & Differences — growth scope and economics vs clinical strategy.
+3. Ask the Transcripts — “What are the purchase timelines?”
+4. Ask an unsupported question — “What is the average price of a robotic surgery system?”
+5. Follow a citation into Transcript Explorer.
 
 France 6–12 months, Germany 9–18 months, UK 6–9 months if funding is already available. The UK expert says economics and clinical strategy are balanced. No transcript states a system price.
 

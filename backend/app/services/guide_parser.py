@@ -2,7 +2,7 @@
 
 Architectural decision:
 - Guide questions are source data, like transcripts. The parser reads
-  Interview_Guide.txt and does not invent questions or rephrase them.
+  Interview_Guide.txt when present and does not invent questions or rephrase them.
 """
 
 from __future__ import annotations
@@ -21,6 +21,8 @@ class GuideParseError(ValueError):
 
 def parse_guide_file(path: str | Path) -> InterviewGuide:
     source = Path(path)
+    if not source.is_file():
+        return InterviewGuide(title="", objective="", questions=[])
     return parse_guide(source.read_text(encoding="utf-8-sig"), source_path=str(source))
 
 

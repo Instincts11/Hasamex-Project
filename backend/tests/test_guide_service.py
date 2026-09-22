@@ -1,11 +1,8 @@
 from app.llm.client import MockLLMProvider
 from app.models.guide import GuideQuestion
 from app.services.evidence_store import EvidenceStore
-from app.services.guide_parser import parse_guide_file
 from app.services.guide_service import analyze_guide_question, retrieve_per_transcript
 from app.services.retrieval import LexicalRetriever
-
-from tests.conftest import INTERVIEW_GUIDE
 
 
 def test_guide_retrieval_covers_each_market_for_barriers(
@@ -24,9 +21,11 @@ def test_guide_retrieval_covers_each_market_for_barriers(
 def test_guide_retrieval_covers_all_three_timelines(
     evidence_store: EvidenceStore, retriever: LexicalRetriever
 ) -> None:
-    guide = parse_guide_file(INTERVIEW_GUIDE)
-    timeline = guide.questions[5]
-    hits = retrieve_per_transcript(retriever, evidence_store, timeline.text)
+    hits = retrieve_per_transcript(
+        retriever,
+        evidence_store,
+        "What is the typical hospital decision-making timeline for purchasing a new robotic system?",
+    )
     joined = " ".join(hit.evidence.text.lower() for hit in hits)
     assert "six to twelve months" in joined
     assert "nine to eighteen months" in joined

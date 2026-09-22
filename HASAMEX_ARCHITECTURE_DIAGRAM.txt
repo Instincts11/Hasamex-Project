@@ -1,0 +1,133 @@
+HASAMEX AI ENGINEER CASE — SYSTEM FLOW
+
+                         ┌─────────────────────────┐
+                         │     3 EXPERT CALLS      │
+                         │ France / Germany / UK   │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │       INGESTION         │
+                         │ Parse timestamp/speaker │
+                         │ Normalize transcript    │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │     EVIDENCE STORE      │
+                         │                         │
+                         │ Evidence ID             │
+                         │ Expert / Role / Market  │
+                         │ Speaker / Timestamp     │
+                         │ Original Text           │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │       RETRIEVAL         │
+                         │ Lexical / Semantic      │
+                         │ Metadata filtering      │
+                         └────────────┬────────────┘
+                                      │
+             ┌────────────────────────┼────────────────────────┐
+             │                        │                        │
+             ▼                        ▼                        ▼
+   ┌─────────────────┐     ┌────────────────────┐    ┌─────────────────┐
+   │ INTERVIEW GUIDE │     │ THEMES & DIFFERENCES│    │  CROSS-CALL Q&A │
+   │                 │     │                    │    │                 │
+   │ question        │     │ claims             │    │ user question   │
+   │ answer          │     │ themes             │    │ retrieval       │
+   │ evidence        │     │ positions          │    │ grounded answer│
+   └────────┬────────┘     └─────────┬──────────┘    └────────┬────────┘
+            │                        │                         │
+            └────────────────────────┼─────────────────────────┘
+                                     │
+                                     ▼
+                         ┌─────────────────────────┐
+                         │          LLM            │
+                         │                         │
+                         │ Synthesize / interpret  │
+                         │ Return structured JSON  │
+                         │ Return evidence IDs     │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │       VALIDATION        │
+                         │                         │
+                         │ Pydantic schema         │
+                         │ Evidence IDs exist      │
+                         │ Scope preserved         │
+                         │ No unsupported claims   │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │   EVIDENCE RESOLUTION   │
+                         │                         │
+                         │ ID → original text      │
+                         │ ID → timestamp          │
+                         │ ID → expert/market      │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │       NEXT.JS UI        │
+                         │                         │
+                         │ Dashboard               │
+                         │ Guide Answers           │
+                         │ Themes                  │
+                         │ Differences             │
+                         │ Transcript Explorer     │
+                         │ Cross-call Q&A          │
+                         └─────────────────────────┘
+
+
+CORE PRINCIPLE:
+
+             ┌──────────────────┐
+             │      LLM         │
+             │  INTERPRETATION  │
+             └────────┬─────────┘
+                      │
+                      │ NEVER OWNS
+                      │ SOURCE TRUTH
+                      ▼
+             ┌──────────────────┐
+             │    EVIDENCE      │
+             │      STORE       │
+             │  SOURCE TRUTH    │
+             └──────────────────┘
+
+
+DETERMINISTIC VS PROBABILISTIC:
+
+DETERMINISTIC                         PROBABILISTIC
+───────────────                       ──────────────
+Parsing                               Answer synthesis
+Timestamp extraction                  Theme interpretation
+Speaker extraction                    Claim normalization
+Evidence IDs                          Disagreement interpretation
+Retrieval                             Natural language generation
+Evidence lookup
+Quote resolution
+Schema validation
+
+
+SCALING:
+
+3 transcripts
+    ↓
+In-memory / simple retrieval
+    ↓
+30+ transcripts
+    ↓
+Persistent storage
+    + embeddings
+    + hybrid retrieval
+    + metadata filters
+    + reranking
+    + async ingestion
+    + observability
+    ↓
+Larger production corpus

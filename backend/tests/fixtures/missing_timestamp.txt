@@ -1,0 +1,10 @@
+Expert 1 – Test Expert
+Role: Tester
+Market: Testland
+
+Interviewer: Hello without a timestamp.
+
+Dr. Test: Expert answer with no timestamp.
+
+00:10
+Dr. Test: This one has a timestamp.

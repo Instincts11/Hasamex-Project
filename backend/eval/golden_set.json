@@ -1,0 +1,100 @@
+{
+  "description": "Small golden set over the three supplied transcripts. Relevant IDs are the expert turns that actually answer the question.",
+  "cases": [
+    {
+      "id": "price-unsupported",
+      "question": "What is the average price of a robotic surgery system?",
+      "relevant_ids": [],
+      "required_ids": [],
+      "required_quote_substrings": [],
+      "expected_markets": [],
+      "expect_no_evidence": true,
+      "forbidden_answer_substrings": ["million", "$", "€"]
+    },
+    {
+      "id": "purchase-timelines",
+      "question": "What are the purchase timelines?",
+      "relevant_ids": [
+        "ev_france_007",
+        "ev_germany_007",
+        "ev_united_kingdom_006"
+      ],
+      "required_ids": [
+        "ev_france_007",
+        "ev_germany_007",
+        "ev_united_kingdom_006"
+      ],
+      "required_quote_substrings": [
+        "six to twelve months",
+        "nine to eighteen months",
+        "six to nine months"
+      ],
+      "expected_markets": ["France", "Germany", "United Kingdom"],
+      "expect_no_evidence": false
+    },
+    {
+      "id": "barriers",
+      "question": "What are the main barriers to adoption?",
+      "relevant_ids": [
+        "ev_france_002",
+        "ev_germany_002",
+        "ev_united_kingdom_002"
+      ],
+      "required_ids": [
+        "ev_france_002",
+        "ev_germany_002",
+        "ev_united_kingdom_002"
+      ],
+      "required_quote_substrings": [
+        "capital budget approval",
+        "cost is the first barrier",
+        "funding is important"
+      ],
+      "expected_markets": ["France", "Germany", "United Kingdom"],
+      "expect_no_evidence": false
+    },
+    {
+      "id": "economics-not-alone",
+      "question": "Do all experts say economics alone determines purchasing?",
+      "relevant_ids": [
+        "ev_united_kingdom_004",
+        "ev_united_kingdom_003",
+        "ev_germany_003",
+        "ev_france_003"
+      ],
+      "required_ids": ["ev_united_kingdom_004"],
+      "required_quote_substrings": [
+        "economics and clinical strategy are balanced"
+      ],
+      "expected_markets": ["United Kingdom"],
+      "expect_no_evidence": false,
+      "forbidden_answer_substrings": ["yes, all experts"]
+    },
+    {
+      "id": "growth-scope",
+      "question": "What adoption trend do you expect over the next 3–5 years?",
+      "relevant_ids": [
+        "ev_france_006",
+        "ev_germany_006",
+        "ev_united_kingdom_005"
+      ],
+      "required_ids": [
+        "ev_france_006",
+        "ev_germany_006",
+        "ev_united_kingdom_005"
+      ],
+      "required_quote_substrings": [
+        "15 to 20 percent",
+        "stronger centres",
+        "whole market",
+        "some areas"
+      ],
+      "expected_markets": ["France", "Germany", "United Kingdom"],
+      "expect_no_evidence": false,
+      "forbidden_answer_substrings": [
+        "the market will grow 15-20%",
+        "the market will grow 15–20%"
+      ]
+    }
+  ]
+}

@@ -64,11 +64,14 @@ export default async function OverviewPage() {
   try {
     const health = await api.health();
     corpus = health;
-    const [themeBody, details] = await Promise.all([
-      api.themes(),
-      Promise.all(health.transcripts.map((item) => api.transcript(item.transcript_id))),
-    ]);
-    themes = themeBody.themes;
+    const details = await Promise.all(
+      health.transcripts.map((item) => api.transcript(item.transcript_id)),
+    );
+    try {
+      themes = (await api.themes()).themes;
+    } catch {
+      themes = [];
+    }
     for (const detail of details) {
       const opening = firstExpertTurn(detail.segments);
       if (opening) {

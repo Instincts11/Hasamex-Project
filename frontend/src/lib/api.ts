@@ -10,7 +10,26 @@ type ApiErrorBody = {
   detail?: string;
 };
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+const inflightGets = new Map<string, Promise<unknown>>();
+const memoizedGets = new Map<string, unknown>();
+
+function isGet(init?: RequestInit) {
+  return !init?.method || init.method.toUpperCase() === "GET";
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryDelayMs(response: Response, attempt: number) {
+  const retryAfter = Number(response.headers.get("Retry-After"));
+  if (Number.isFinite(retryAfter) && retryAfter > 0) {
+    return Math.min(retryAfter * 1000, 8000);
+  }
+  return 1500 * (attempt + 1);
+}
+
+async function requestOnce<T>(path: string, init?: RequestInit, attempt = 0): Promise<T> {
   const response = await fetch(`${baseUrl()}${path}`, {
     ...init,
     headers: {
@@ -19,11 +38,38 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
     cache: "no-store",
   });
+  if (response.status === 429 && attempt < 1) {
+    await sleep(retryDelayMs(response, attempt));
+    return requestOnce<T>(path, init, attempt + 1);
+  }
   if (!response.ok) {
     const raw = await response.text();
     throw new Error(readErrorMessage(raw, response.status));
   }
   return response.json() as Promise<T>;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!isGet(init)) {
+    return requestOnce<T>(path, init);
+  }
+  if (memoizedGets.has(path)) {
+    return memoizedGets.get(path) as T;
+  }
+  const pending = inflightGets.get(path);
+  if (pending) {
+    return pending as Promise<T>;
+  }
+  const next = requestOnce<T>(path, init)
+    .then((data) => {
+      memoizedGets.set(path, data);
+      return data;
+    })
+    .finally(() => {
+      inflightGets.delete(path);
+    });
+  inflightGets.set(path, next);
+  return next;
 }
 
 function readErrorMessage(raw: string, status: number): string {

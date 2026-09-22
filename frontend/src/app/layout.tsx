@@ -7,11 +7,15 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 const caveat = Caveat({
   variable: "--font-caveat",
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -32,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
-      <body className="min-h-full bg-bg font-sans text-ink">
+      <body className={`${inter.className} min-h-full bg-bg font-sans text-ink`}>
         <ThemeProvider>
           <AppShell>{children}</AppShell>
         </ThemeProvider>

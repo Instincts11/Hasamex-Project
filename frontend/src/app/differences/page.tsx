@@ -12,10 +12,18 @@ export default function DifferencesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     api
       .differences()
-      .then((body) => setDifferences(body.differences))
-      .catch((err: Error) => setError(err.message));
+      .then((body) => {
+        if (!cancelled) setDifferences(body.differences);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

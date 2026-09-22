@@ -60,9 +60,12 @@ def create_app(context: AppContext | None = None) -> FastAPI:
             "llm_provider": settings.llm_provider,
         }
 
-    @app.exception_handler(LLMError)
-    async def llm_error_handler(_request: Request, exc: LLMError) -> JSONResponse:
+    def llm_error_response(exc: LLMError) -> JSONResponse:
         request_id = str(uuid.uuid4())
+        headers: dict[str, str] = {}
+        if exc.http_status == 429:
+            wait = int(exc.retry_after) if exc.retry_after and exc.retry_after > 0 else 8
+            headers["Retry-After"] = str(max(8, wait))
         return JSONResponse(
             status_code=exc.http_status,
             content={
@@ -72,7 +75,12 @@ def create_app(context: AppContext | None = None) -> FastAPI:
                     "request_id": request_id,
                 }
             },
+            headers=headers,
         )
+
+    @app.exception_handler(LLMError)
+    async def llm_error_handler(_request: Request, exc: LLMError) -> JSONResponse:
+        return llm_error_response(exc)
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
@@ -91,17 +99,7 @@ def create_app(context: AppContext | None = None) -> FastAPI:
         if isinstance(exc, StarletteHTTPException):
             return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
         if isinstance(exc, LLMError):
-            request_id = str(uuid.uuid4())
-            return JSONResponse(
-                status_code=exc.http_status,
-                content={
-                    "error": {
-                        "code": exc.code,
-                        "message": redact_secrets(exc.user_message),
-                        "request_id": request_id,
-                    }
-                },
-            )
+            return llm_error_response(exc)
         return JSONResponse(
             status_code=500,
             content={

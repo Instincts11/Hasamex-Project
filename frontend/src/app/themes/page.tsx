@@ -12,10 +12,18 @@ export default function ThemesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     api
       .themes()
-      .then((body) => setThemes(body.themes))
-      .catch((err: Error) => setError(err.message));
+      .then((body) => {
+        if (!cancelled) setThemes(body.themes);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

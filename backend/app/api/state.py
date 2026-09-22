@@ -12,10 +12,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 import threading
+import time
 
 from app.core.config import Settings, load_settings
 from app.core.dedup import ExclusiveRequestGate
 from app.llm.client import LLMProvider, OpenAIProvider
+from app.llm.errors import LLMError, LLMRateLimited
 from app.llm.extractive import ExtractiveLLMProvider
 from app.models.guide import InterviewGuide
 from app.models.reports import GuideReport, ThemeReport
@@ -40,6 +42,8 @@ class AppContext:
     guide_report: GuideReport | None = None
     data_dir: Path = field(init=False, default=Path("."))
     _theme_lock: threading.Lock = field(default_factory=threading.Lock)
+    _theme_error: LLMError | None = None
+    _theme_retry_at: float = 0.0
 
     def __post_init__(self) -> None:
         self.data_dir = self.settings.data_dir
@@ -54,12 +58,30 @@ class AppContext:
         self.retriever = LexicalRetriever(self.store)
         self.theme_report = None
         self.guide_report = None
+        self._theme_error = None
+        self._theme_retry_at = 0.0
 
     def get_theme_report(self) -> ThemeReport:
         with self._theme_lock:
-            if self.theme_report is None:
+            if self.theme_report is not None:
+                return self.theme_report
+            now = time.monotonic()
+            if self._theme_error is not None and now < self._theme_retry_at:
+                raise self._theme_error
+            try:
                 self.theme_report = analyze_themes(self.store, self.provider)
-            return self.theme_report
+                self._theme_error = None
+                self._theme_retry_at = 0.0
+                return self.theme_report
+            except LLMError as exc:
+                self._theme_error = exc
+                wait = exc.retry_after if exc.retry_after and exc.retry_after > 0 else 8.0
+                if isinstance(exc, LLMRateLimited):
+                    wait = max(wait, 8.0)
+                else:
+                    wait = min(wait, 1.0)
+                self._theme_retry_at = now + wait
+                raise
 
 
 def create_runtime_provider(settings: Settings) -> LLMProvider:

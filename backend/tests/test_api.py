@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.api.state import build_context
+from app.llm.errors import LLMRateLimited
 from app.main import create_app
 from app.models.analysis import NO_EVIDENCE_ANSWER
 from app.services.evidence_store import EvidenceStore
@@ -116,3 +117,27 @@ def test_themes_and_differences_use_store_quotes() -> None:
         for position in item["positions"]
     }
     assert len(markets) >= 2
+
+
+def test_theme_rate_limit_cools_down_and_sends_retry_after() -> None:
+    class RateLimitedProvider:
+        model_name = "mock"
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def complete(self, messages: object) -> None:
+            del messages
+            self.calls += 1
+            raise LLMRateLimited("Groq HTTP 429", retry_after=12)
+
+    provider = RateLimitedProvider()
+    context = build_context(provider=provider)
+    client = TestClient(create_app(context), raise_server_exceptions=False)
+    first = client.get("/api/analysis/themes")
+    assert first.status_code == 429
+    assert first.headers.get("retry-after") == "12"
+    calls = provider.calls
+    assert client.get("/api/analysis/themes").status_code == 429
+    assert client.get("/api/analysis/differences").status_code == 429
+    assert provider.calls == calls

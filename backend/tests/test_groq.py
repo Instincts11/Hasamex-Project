@@ -294,11 +294,11 @@ def test_groq_failure_does_not_break_transcripts() -> None:
     assert transcripts.status_code == 200
     assert len(transcripts.json()) == 3
     qa = client.post("/api/qa", json={"question": "What are the purchase timelines?"})
-    assert qa.status_code == 503
+    assert qa.status_code == 200
     body = qa.json()
-    assert body["error"]["code"] == LLM_PROVIDER_UNAVAILABLE
+    quotes = " ".join(item["quote"].lower() for item in body["evidence"])
+    assert "six to twelve months" in quotes
     assert "gsk_" not in qa.text
-    assert "transcripts and source evidence are still accessible" in body["error"]["message"]
 
 
 def test_startup_fails_when_groq_selected_without_key(monkeypatch: pytest.MonkeyPatch) -> None:

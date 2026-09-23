@@ -43,7 +43,10 @@ export function DifferenceCard({
     <section className="card overflow-hidden">
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => {
+          if (expanded) setActiveKey(null);
+          onToggle();
+        }}
         className="flex w-full items-start justify-between gap-4 px-6 py-5 text-left hover:bg-surface-hover max-[600px]:flex-col max-[600px]:items-start max-[600px]:gap-3 max-[600px]:px-4 max-[600px]:py-4"
       >
         <div>
@@ -63,7 +66,7 @@ export function DifferenceCard({
         </span>
       </button>
       {expanded ? (
-        <div className="border-t border-line px-6 py-5">
+        <div className="border-t border-line px-6 py-5 max-[600px]:px-4">
           <div className="grid gap-5">
             <p className="text-sm leading-relaxed text-ink-secondary">
               {difference.summary}

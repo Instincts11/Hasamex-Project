@@ -17,6 +17,19 @@ function isGet(init?: RequestInit) {
   return !init?.method || init.method.toUpperCase() === "GET";
 }
 
+function isEmptyGetPayload(path: string, data: unknown) {
+  if (!data || typeof data !== "object") return false;
+  if (path === "/analysis/differences") {
+    return !Array.isArray((data as { differences?: unknown }).differences) ||
+      (data as { differences: unknown[] }).differences.length === 0;
+  }
+  if (path === "/analysis/themes") {
+    return !Array.isArray((data as { themes?: unknown }).themes) ||
+      (data as { themes: unknown[] }).themes.length === 0;
+  }
+  return false;
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -62,7 +75,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const next = requestOnce<T>(path, init)
     .then((data) => {
-      memoizedGets.set(path, data);
+      if (!isEmptyGetPayload(path, data)) {
+        memoizedGets.set(path, data);
+      }
       return data;
     })
     .finally(() => {

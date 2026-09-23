@@ -14,10 +14,18 @@ export default function GuidePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     api
       .guide()
-      .then(setGuide)
-      .catch((err: Error) => setError(err.message));
+      .then((data) => {
+        if (!cancelled) setGuide(data);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function analyze(questionNumber?: number) {
@@ -50,27 +58,36 @@ export default function GuidePage() {
   return (
     <div>
       <PageHeader
-        title="Interview Guide"
-        subtitle="AI-generated answers grounded in the expert interviews."
+        title={guide.title || "Interview Guide"}
+        subtitle={
+          guide.objective ||
+          "AI-generated answers grounded in the expert interviews."
+        }
         action={
-          <button
-            type="button"
-            onClick={() => void analyze()}
-            disabled={loading !== null}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
-          >
-            {loading === "all" ? "Analyzing…" : "Analyze all questions"}
-          </button>
+          guide.questions.length ? (
+            <button
+              type="button"
+              onClick={() => void analyze()}
+              disabled={loading !== null}
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
+            >
+              {loading === "all" ? "Analyzing…" : "Analyze all questions"}
+            </button>
+          ) : null
         }
       />
       {error ? <p className="mb-4 text-sm text-conflict">{error}</p> : null}
-      <Guide
-        questions={guide.questions}
-        results={results}
-        expanded={expanded}
-        loading={loading}
-        onToggle={(number) => void toggle(number)}
-      />
+      {!guide.questions.length ? (
+        <p className="text-sm text-muted">No interview-guide questions are loaded.</p>
+      ) : (
+        <Guide
+          questions={guide.questions}
+          results={results}
+          expanded={expanded}
+          loading={loading}
+          onToggle={(number) => void toggle(number)}
+        />
+      )}
     </div>
   );
 }

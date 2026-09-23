@@ -31,10 +31,10 @@ PRICE_QUESTION_RE = re.compile(r"\b(price|priced|usd|eur|dollar|euro)\b", re.IGN
 PRICE_EVIDENCE_RE = re.compile(r"€|\$|\bprice\b|\busd\b|\beur\b|\baverage\b", re.IGNORECASE)
 
 THEME_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("Purchase timelines", re.compile(r"\b(month|timeline|cycle)\b", re.I)),
     ("Economic constraints", re.compile(r"cost|budget|capital|roi|economic|finance|funding", re.I)),
     ("Training and utilisation", re.compile(r"train|surgeon|utilis", re.I)),
     ("Clinical strategy", re.compile(r"clinical|outcome|strategy", re.I)),
-    ("Purchase timelines", re.compile(r"month|timeline|cycle", re.I)),
     ("Adoption and growth", re.compile(r"adopt|growth|percent|digit|procedur", re.I)),
 )
 

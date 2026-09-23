@@ -18,7 +18,7 @@ def test_health_and_transcript_list() -> None:
     body = health.json()
     assert body["transcript_count"] == 3
     assert body["evidence_count"] == 21
-    assert body["guide_question_count"] == 0
+    assert body["guide_question_count"] == 6
     assert "GROQ_API_KEY" not in health.text
     assert "gsk_" not in health.text
 
@@ -91,10 +91,16 @@ def test_qa_timelines_resolve_store_quotes() -> None:
     assert france["timestamp"] == "06:08"
 
 
-def test_guide_question_is_unavailable_without_source_file() -> None:
+def test_guide_question_covers_three_markets() -> None:
     client = _client()
     response = client.post("/api/analysis/guide", json={"question_number": 2})
-    assert response.status_code == 404
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["questions"]) == 1
+    markets = {item["market"] for item in body["questions"][0]["evidence"]}
+    assert markets == {"France", "Germany", "United Kingdom"}
+    quotes = " ".join(item["quote"].lower() for item in body["questions"][0]["evidence"])
+    assert "capital budget approval" in quotes
 
 
 def test_themes_and_differences_use_store_quotes() -> None:
@@ -119,7 +125,7 @@ def test_themes_and_differences_use_store_quotes() -> None:
     assert len(markets) >= 2
 
 
-def test_theme_rate_limit_cools_down_and_sends_retry_after() -> None:
+def test_themes_remain_available_when_llm_is_rate_limited() -> None:
     class RateLimitedProvider:
         model_name = "mock"
 
@@ -134,10 +140,14 @@ def test_theme_rate_limit_cools_down_and_sends_retry_after() -> None:
     provider = RateLimitedProvider()
     context = build_context(provider=provider)
     client = TestClient(create_app(context), raise_server_exceptions=False)
-    first = client.get("/api/analysis/themes")
-    assert first.status_code == 429
-    assert first.headers.get("retry-after") == "12"
-    calls = provider.calls
-    assert client.get("/api/analysis/themes").status_code == 429
-    assert client.get("/api/analysis/differences").status_code == 429
-    assert provider.calls == calls
+    themes = client.get("/api/analysis/themes")
+    assert themes.status_code == 200
+    theme_body = themes.json()["themes"]
+    assert theme_body
+    supporting = [item for theme in theme_body for item in theme["supporting"]]
+    assert all(item["quote"] for item in supporting)
+    assert provider.calls == 0
+    differences = client.get("/api/analysis/differences")
+    assert differences.status_code == 200
+    assert differences.json()["differences"]
+    assert provider.calls == 0

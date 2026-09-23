@@ -11,6 +11,8 @@ from app.api.schemas import (
     evidence_out,
 )
 from app.api.state import AppContext
+from app.llm.errors import LLMError
+from app.llm.extractive import ExtractiveLLMProvider
 from app.services.guide_service import analyze_guide, analyze_guide_question
 
 router = APIRouter()
@@ -39,15 +41,28 @@ def analyze_interview_guide(
 
 
 def _analyze_guide(request: GuideAnalyzeRequest, context: AppContext) -> GuideReportOut:
-    if request.question_number is None:
-        if context.guide_report is None:
-            context.guide_report = analyze_guide(
-                context.guide,
-                context.store,
-                context.retriever,
-                context.provider,
-            )
+    if request.question_number is None and context.guide_report is not None:
         return _report_out(context.guide_report)
+    try:
+        return _analyze_guide_with(request, context, context.provider)
+    except LLMError:
+        return _analyze_guide_with(request, context, ExtractiveLLMProvider())
+
+
+def _analyze_guide_with(
+    request: GuideAnalyzeRequest,
+    context: AppContext,
+    provider,
+) -> GuideReportOut:
+    if request.question_number is None:
+        report = analyze_guide(
+            context.guide,
+            context.store,
+            context.retriever,
+            provider,
+        )
+        context.guide_report = report
+        return _report_out(report)
 
     question = next(
         (item for item in context.guide.questions if item.number == request.question_number),
@@ -55,7 +70,7 @@ def _analyze_guide(request: GuideAnalyzeRequest, context: AppContext) -> GuideRe
     )
     if question is None:
         raise HTTPException(status_code=404, detail="Guide question not found.")
-    result = analyze_guide_question(question, context.store, context.retriever, context.provider)
+    result = analyze_guide_question(question, context.store, context.retriever, provider)
     return GuideReportOut(
         title=context.guide.title,
         objective=context.guide.objective,

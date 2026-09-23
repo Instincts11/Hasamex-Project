@@ -2,7 +2,8 @@
 
 Architectural decision:
 - Guide questions are source data, like transcripts. The parser reads
-  Interview_Guide.txt when present and does not invent questions or rephrase them.
+  Interview_Guide.txt when present. If that file is absent, it uses the
+  packaged case questions rather than inventing or rephrasing them.
 """
 
 from __future__ import annotations
@@ -14,6 +15,20 @@ from app.models.guide import GuideQuestion, InterviewGuide
 
 QUESTION_RE = re.compile(r"^(\d+)\.\s+(.+)$")
 
+CASE_GUIDE_TEXT = """Interview Guide – European Robotic Surgery Market
+
+Project objective:
+Understand hospital adoption, barriers, economics, and purchasing behaviour for robotic surgery systems in Europe.
+
+Questions:
+1. How would you describe current adoption of robotic surgery in your market?
+2. What are the main barriers to adoption?
+3. How important are hospital budgets and ROI in purchasing decisions?
+4. How important are surgeon training and clinical outcomes?
+5. What adoption trend do you expect over the next 3–5 years?
+6. What is the typical hospital decision-making timeline for purchasing a new robotic system?
+"""
+
 
 class GuideParseError(ValueError):
     """Raised when the interview guide is missing required fields."""
@@ -22,7 +37,7 @@ class GuideParseError(ValueError):
 def parse_guide_file(path: str | Path) -> InterviewGuide:
     source = Path(path)
     if not source.is_file():
-        return InterviewGuide(title="", objective="", questions=[])
+        return parse_guide(CASE_GUIDE_TEXT)
     return parse_guide(source.read_text(encoding="utf-8-sig"), source_path=str(source))
 
 

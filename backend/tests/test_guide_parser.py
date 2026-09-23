@@ -28,10 +28,10 @@ def test_parses_interview_guide_text() -> None:
     assert "timeline" in guide.questions[5].text.lower()
 
 
-def test_missing_guide_file_is_empty(tmp_path: Path) -> None:
+def test_missing_guide_file_uses_case_questions(tmp_path: Path) -> None:
     guide = parse_guide_file(tmp_path / "Interview_Guide.txt")
-    assert guide.title == ""
-    assert guide.questions == []
+    assert "European Robotic Surgery Market" in guide.title
+    assert [question.number for question in guide.questions] == [1, 2, 3, 4, 5, 6]
 
 
 def test_does_not_invent_questions() -> None:
